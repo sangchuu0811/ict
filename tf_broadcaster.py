@@ -68,41 +68,21 @@ class TfBroadcaster(Node):
         self.pgm_file_path = ('/home/hgy/gy_ws/src/local_pgm/map/empty_map3_keep.pgm')
         self.yaml_file_path = ('/home/hgy/gy_ws/src/local_pgm/map/empty_map3_keep.yaml')
 
-        # 자른 이미지의 범위 설정 (xmin, ymin, xmax, ymax)
-        # self.crop_range = (0, 0, 100, 100)
-
-         # 수동으로 설정할 모서리 GPS 좌표
-        # big pgm
-        # self.lat_min = 37.62602233886719
-        # self.lat_max = 37.63599395751953
-        # self.lon_min = 127.05005645751953
-        # self.lon_max = 127.06004333496094
-
-        # crop pgm
-        # self.lat_min = 37.631019592285156  # 왼쪽 하단 위도
-        # self.lat_max = 37.63600540161133  # 오른쪽 상단 위도
-        # self.lon_min = 127.0550537109375  # 왼쪽 하단 경도
-        # self.lon_max = 127.0600357055664  # 오른쪽 상단 경도
-
         # PGM 및 YAML 파일 불러오기
         self.load_map(self.pgm_file_path, self.yaml_file_path)
 
     def load_map(self, pgm_file_path, yaml_file_path):
         # PGM 파일 읽기
-
         try:
             with open(yaml_file_path, 'r') as yaml_file:
                 yaml_data = yaml.safe_load(yaml_file)
 
-            image = cv2.imread(pgm_file_path, cv2.IMREAD_UNCHANGED)
-            if image is None:
+            self.image = cv2.imread(pgm_file_path, cv2.IMREAD_UNCHANGED)
+            if self.image is None:
                 self.get_logger().error("이미지를 불러오는 데 실패했습니다.")
                 return
 
-            self.image = cv2.flip(image, 1)  # 1은 좌우 반전
-
-            # x_min, y_min, x_max, y_max = self.crop_range
-            # cropped_image = self.image[y_min:y_max, x_min:x_max]
+            self.image = cv2.flip(self.image, 1)  # 1은 좌우 반전
 
             # YAML 데이터에서 맵 정보 추출
             self.resolution = yaml_data.get('resolution')
@@ -114,11 +94,11 @@ class TfBroadcaster(Node):
 
              # 이미지 데이터 처리
             if negate == 1:
-                image = cv2.bitwise_not(image)
+                self.image = cv2.bitwise_not(self.image)
 
             # 픽셀 값을 map 데이터로 매핑
             self.occupancy_data = []
-            for pixel in image.flatten():
+            for pixel in self.image.flatten():
                 if pixel >= occupied_thresh:
                     self.occupancy_data.append(0)
                 elif pixel <= free_thresh:
@@ -126,7 +106,7 @@ class TfBroadcaster(Node):
                 else:
                     self.occupancy_data.append(-1)
 
-            self.image_shape = image.shape
+            self.image_shape = self.image.shape
 
         except Exception as e:
             self.get_logger().error(f"오류 발생: {e}")
@@ -172,11 +152,11 @@ class TfBroadcaster(Node):
             y_min = max(center_pixel_y - 25, 0)
             y_max = min(center_pixel_y + 25, self.image_shape[0])
 
-            # PGM 이미지 잘라내기
+            # # PGM 이미지 잘라내기
             cropped_image = self.image[y_min:y_max, x_min:x_max]
 
-            # # #잘라낸 이미지를 RViz에 표시하는 코드 추가
-            # publish_cropped_image(cropped_image)
+            # # # #잘라낸 이미지를 RViz에 표시하는 코드 추가
+            # # publish_cropped_image(cropped_image)
 
             visual_marker = Marker()
             visual_marker.header.frame_id = "map"
