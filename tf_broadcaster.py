@@ -168,22 +168,23 @@ class TfBroadcaster(Node):
 
         # 마커의 중심을 기준으로 잘라낼 영역 계산
         
-        center_pixel_x = int(lon-lon/ self.resolution)
+        center_pixel_x = int((lon-lon)/ self.resolution)
         center_pixel_y = int((lat -lat) / self.resolution)
 
 
         self.get_logger().info(f"origin x={self.origin[0]}, origin y={self.origin[1]}")
         self.get_logger().info(f"x center pixel: x pixel={center_pixel_x}, y pixel={center_pixel_y} ")
 
+        self.get_logger().info(f"img shape : {self.image_shape}")
         # 잘라낼 영역의 픽셀 좌표 계산 (50픽셀)
-        x_min = max(center_pixel_x - 25, 0)
-        x_max = min(center_pixel_x + 25, self.image_shape[0])
-        y_min = max(center_pixel_y - 25, 0)
-        y_max = min(center_pixel_y + 25, self.image_shape[1])
+        x_min = max(center_pixel_x - 50, 0)
+        x_max = min(center_pixel_x + 50, self.image_shape[0])
+        y_min = max(center_pixel_y - 50, 0)
+        y_max = min(center_pixel_y + 50, self.image_shape[1])
 
         # # PGM 이미지 잘라내기
         self.cropped_image = self.image[y_min:y_max, x_min:x_max]
-
+        # self.cropped_image = [50,50]
         #잘라낸 이미지를 RViz에 표시하는 코드 추가
         self.publish_map_callback2(self.cropped_image)
 
@@ -194,23 +195,34 @@ class TfBroadcaster(Node):
         grid_msg.header.stamp = self.get_clock().now().to_msg()
         grid_msg.header.frame_id = "map"
 
+        # 리스트에서 높이와 너비를 계산
+        height = len(cropped_image)  # 리스트의 길이
+        width = len(cropped_image[0]) if height > 0 else 0  # 첫 번째 요소의 길이
+
+
         self.get_logger().info("before")
-        if not hasattr(self, 'origin_modified'):
-            self.get_logger().info("1211111111111111111111111111111111111") 
-            self.origin[0] += 0.0020
-            self.origin[1] += 0.0011
-            
+        # origin_modified 속성이 없을 경우에만 루프를 시작
+        while not hasattr(self, 'origin_modified'):
+            self.get_logger().info("12") 
+            self.origin[0] -= 0.0020
+            self.origin[1] -= 0.0030
+             # origin_modified 속성을 설정하여 루프 종료
             self.origin_modified = True
+            break  # 루프 종료
+
+        # origin2에 수정된 origin 값 저장
+        self.origin2 = [self.origin[0], self.origin[1]]
+        self.get_logger().info(f"origin2 : {self.origin2}")
 
 
         # 잘라낸 이미지의 정보 설정
         grid_msg.info.height, grid_msg.info.width = cropped_image.shape
         grid_msg.info.resolution = self.resolution
-        grid_msg.info.origin.position.x = self.origin[0]
-        grid_msg.info.origin.position.y = self.origin[1]
+        grid_msg.info.origin.position.x = self.origin2[0]
+        grid_msg.info.origin.position.y = self.origin2[1]
         grid_msg.info.origin.position.z = 0.0
         grid_msg.info.origin.orientation.w = 1.0
-
+        
         # 잘라낸 이미지의 픽셀 값을 map 데이터로 매핑
         self.occupancy_data = []
         for pixel in cropped_image.flatten():
@@ -222,6 +234,7 @@ class TfBroadcaster(Node):
         grid_msg.data = self.occupancy_data
         self.map_publisher_.publish(grid_msg)
         self.get_logger().info("잘라낸 이미지를 사용하여 새로운 map을 성공적으로 발행했습니다.")
+        
 
 
     def timer_callback(self):
