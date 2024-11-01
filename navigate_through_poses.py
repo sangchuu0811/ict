@@ -1,0 +1,129 @@
+import rclpy
+from visualization_msgs.msg import Marker, MarkerArray
+from geometry_msgs.msg import Point, Twist, PoseStamped
+from firebase_admin import db, credentials
+import firebase_admin
+from rclpy.node import Node
+from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
+from rclpy.duration import Duration
+from copy import deepcopy
+
+class CoordinateMarker:
+    def __init__(self, lat, lon):
+        self.lat = lat
+        self.lon = lon
+
+def parse_coordinates(data):
+    data = data.strip("[]").split(", ")
+    coordinates = []
+
+    for item in data:
+        lat_lon = item.split(" ")
+        lat = float(lat_lon[0])
+        lon = float(lat_lon[1])
+        coordinates.append((lat, lon))
+
+    return coordinates
+
+class CmdVelVisualizer(Node):
+    def __init__(self):
+        super().__init__('setDBmarker')
+
+        cred = credentials.Certificate("/home/hgy/ict/sensemart-8c5c7-firebase-adminsdk-npdg8-fccf1988f9.json")
+        firebase_admin.initialize_app(cred, {
+            'databaseURL': 'https://sensemart-8c5c7-default-rtdb.firebaseio.com'
+        })
+        self.ref = db.reference('admin')
+
+        self.publisher_ = self.create_publisher(Twist, 'cmd_vel', 30)
+        self.marker_publisher = self.create_publisher(MarkerArray, 'waypoints', 30)
+        self.timer = self.create_timer(5.0, self.publish_data_from_firebase)
+
+        self.marker_array = MarkerArray()
+        self.navigator = BasicNavigator()
+        self.robot_route = []
+
+    def publish_data_from_firebase(self):
+        marker_data = self.ref.child('marker/data').get()
+
+        if marker_data:
+            coordinates = parse_coordinates(marker_data)
+            self.update_visualization_markers(coordinates)
+
+            if coordinates:
+                self.robot_route = coordinates  # Firebase에서 가져온 좌표를 경로로 설정
+                self.navigate_route()
+
+    def publish_cmd_vel(self, coordinate):
+        twist_msg = Twist()
+        twist_msg.linear.x = coordinate[1]
+        twist_msg.linear.y = coordinate[0]
+        twist_msg.linear.z = 0.0
+        twist_msg.angular.x = 0.0
+        twist_msg.angular.y = 0.0
+        twist_msg.angular.z = 0.0
+
+        self.publisher_.publish(twist_msg)
+        self.get_logger().info('Published cmd_vel: "%s"' % twist_msg)
+
+    def update_visualization_markers(self, coordinates):
+        self.marker_array.markers.clear()
+
+        for lat, lon in coordinates:
+            visual_marker = Marker()
+            visual_marker.header.frame_id = "map"
+            visual_marker.header.stamp = self.get_clock().now().to_msg()
+            visual_marker.ns = "coordinates"
+            visual_marker.id = len(self.marker_array.markers)
+            visual_marker.type = Marker.SPHERE
+            visual_marker.action = Marker.ADD
+
+            visual_marker.pose.position = Point(x=lon, y=lat, z=0.0)
+            visual_marker.scale.x = 0.5
+            visual_marker.scale.y = 0.5
+            visual_marker.scale.z = 0.5
+            visual_marker.color.r = 0.0
+            visual_marker.color.g = 1.0
+            visual_marker.color.b = 0.0
+            visual_marker.color.a = 1.0
+
+            self.marker_array.markers.append(visual_marker)
+
+        self.marker_publisher.publish(self.marker_array)
+
+    def navigate_route(self):
+        route_poses = []
+        pose = PoseStamped()
+        pose.header.frame_id = 'map'
+        pose.header.stamp = self.get_clock().now().to_msg()
+        pose.pose.orientation.w = 1.0
+
+        for lat, lon in self.robot_route:
+            pose.pose.position.x = lon
+            pose.pose.position.y = lat
+            route_poses.append(deepcopy(pose))
+        self.navigator.waitUntilNav2Active()
+        self.navigator.goThroughPoses(route_poses)
+
+        while rclpy.ok() and not self.navigator.isTaskComplete():
+            feedback = self.navigator.getFeedback()
+            if feedback:
+                self.get_logger().info('Current navigation feedback: %s' % feedback)
+
+        result = self.navigator.getResult()
+        if result == TaskResult.SUCCEEDED:
+            self.get_logger().info('Route complete!')
+        elif result == TaskResult.CANCELED:
+            self.get_logger().info('Route was canceled.')
+        elif result == TaskResult.FAILED:
+            self.get_logger().info('Route failed!')
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = CmdVelVisualizer()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
