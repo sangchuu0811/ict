@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.sothree.slidinguppanel.SlidingUpPanelLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+
+    android:gravity="bottom"
+    app:umanoDragView="@id/bottomview"
+    app:umanoScrollableView="@id/route_list"
+    app:umanoPanelHeight="120dp"
+    app:umanoOverlay="true"
+    app:umanoShadowHeight="0dp"
+    app:umanoParallaxOffset="0dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/topview2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/school_map_dpi_"
+        >
+
+        <ImageView
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:id="@+id/marker"
+            android:background="@drawable/marker" />
+
+        <ImageView
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:id="@+id/marker1"
+
+            android:background="@drawable/destination_marker" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/topview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+
+            android:rowCount="1080"
+            android:columnCount="2208"
+            >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <!-- 요거 노랑 덩어리-->
+                <LinearLayout
+                    android:id="@+id/top_route"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.06"
+                    android:layout_marginTop="15dp"
+                    android:layout_marginBottom="10dp"
+                    android:orientation="horizontal"
+                    android:padding="5dp"
+                    android:visibility="visible"
+                    android:background="@drawable/route_card"
+                    android:layout_gravity="center_horizontal">
+
+                    <TextView
+                        android:id="@+id/first_product"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="첫번째 제품"
+                        android:gravity="center_horizontal"
+                        android:maxLines="1"
+                        android:textSize="17dp"
+                        android:paddingLeft="10dp"
+                        android:paddingRight="5dp"
+                        android:layout_marginTop="3dp"
+                        android:textColor="@color/white"
+                        android:maxLength="10"
+                        android:ellipsize="end"/>
+
+                    <TextView
+                        android:id="@+id/next"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:text=">"
+                        android:textSize="20dp"
+                        android:layout_marginTop="3dp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="5dp"
+                        android:textColor="@color/white" />
+
+                    <TextView
+                        android:id="@+id/second_product"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center_horizontal"
+                        android:maxLines="1"
+                        android:text="두번째 제품"
+                        android:textSize="17dp"
+                        android:paddingLeft="5dp"
+                        android:paddingRight="10dp"
+                        android:layout_marginTop="3dp"
+                        android:textColor="@color/white"
+                        android:maxLength="10"
+                        android:ellipsize="end"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="0.94">
+
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <LinearLayout
+        android:id="@+id/bottomview"
+        android:background="@android:color/transparent"
+        android:layout_width="match_parent"
+        android:layout_height="650dp"
+        android:orientation="vertical">
+
+        <View
+            android:id="@+id/swipe_tip"
+            android:layout_width="60dp"
+            android:layout_height="5dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/swipe_tip" />
+        <!--요기-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="650dp"
+            android:background="@drawable/swipe_backgroud"
+            android:orientation="vertical"
+            android:visibility="visible"
+            >
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/guide_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="65dp"
+                    android:text="경로 안내를 시작합니다."
+                    android:textStyle="bold"
+                    android:textSize="30dp"
+                    android:autoSizeMaxTextSize="30dp"
+                    android:autoSizeMinTextSize="25dp"
+                    android:autoSizeTextType="uniform"
+                    android:textColor="@color/black"
+                    android:paddingLeft="25dp"
+                    android:paddingRight="20dp"
+                    android:layout_marginTop="25dp"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"/>
+
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="1.5dp"
+                    android:background="@drawable/divider"
+                    app:layout_constraintStart_toStartOf="@id/guide_text"
+                    app:layout_constraintEnd_toEndOf="@id/guide_text"
+                    app:layout_constraintTop_toBottomOf="@id/guide_text"
+                    android:layout_marginTop="8dp"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+            <androidx.recyclerview.widget.RecyclerView
+
+                android:id="@+id/route_list"
+                android:layout_width="match_parent"
+                android:layout_height="520dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+            </androidx.recyclerview.widget.RecyclerView>
+
+        </LinearLayout>
+    </LinearLayout>
+
+</com.sothree.slidinguppanel.SlidingUpPanelLayout>
